@@ -8,15 +8,11 @@ import (
 // JSON represents JSON documents in map form
 type JSON map[string]interface{}
 
-// RouteAction is a function signature for actions carried out when a route is matched
-type RouteAction func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values)
+// RouteParams is an alias for a map to hold route wildcard parameters, where both keys and values will be strings
+type RouteParams map[string]string
 
-// Route structs define executable HTTP routes
-type Route struct {
-	Path       string
-	Action     RouteAction
-	Middleware []Middleware
-}
+// RouteAction is a function signature for actions carried out when a route is matched
+type RouteAction func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams)
 
 // Middleware is a function signature for HTTP middleware that can be assigned routes
-type Middleware func(request *http.Request, body *[]byte, queryParams url.Values) bool
+type Middleware func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams) bool

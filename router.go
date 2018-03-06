@@ -27,22 +27,24 @@ func dispatch(request *http.Request, response *http.ResponseWriter, method strin
 
 		for _, route := range methodRoutes {
 
-			queryParams, _ := url.ParseQuery(params)
+			routeMatches, routeParams := route.MatchesPath(path)
 
 			// TODO: Implement a check here that works with (and extracts) wildcards
-			if route.Path == path || route.Path == "/*" {
+			if routeMatches {
+
+				queryParams, _ := url.ParseQuery(params)
 
 				for _, middleware := range route.Middleware {
 
 					// Execute all middleware and halt execution if one of them
 					// returns FALSE
-					if middleware(request, body, queryParams) == false {
+					if middleware(request, body, queryParams, routeParams) == false {
 						return false, errors.New("Access denied to route")
 					}
 
 				}
 
-				route.Action(request, response, body, queryParams)
+				route.Action(request, response, body, queryParams, routeParams)
 
 				return true, nil
 
