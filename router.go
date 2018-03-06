@@ -1,45 +1,50 @@
 package jsonserver
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
-// Route structs define executable HTTP routes
-type Route struct {
-	Path  string
-	Route func(request *http.Request, response *http.ResponseWriter, body *[]byte, routeParams url.Values)
-}
-
 var routes = map[string][]Route{}
 
 // RegisterRoute stores a closure to execute against a method and path
-func RegisterRoute(method string, path string, route func(request *http.Request, response *http.ResponseWriter, body *[]byte, routeParams url.Values)) {
+func RegisterRoute(method string, path string, middleware []Middleware, action RouteAction) {
 
 	methods := strings.Split(method, "|")
 
 	for _, method := range methods {
-		routes[method] = append(routes[method], Route{Path: path, Route: route})
+		routes[method] = append(routes[method], Route{Path: path, Action: action, Middleware: middleware})
 	}
 
 }
 
 // Dispatch will search for and execute a route
-func dispatch(request *http.Request, response *http.ResponseWriter, method string, path string, params string, body *[]byte) bool {
+func dispatch(request *http.Request, response *http.ResponseWriter, method string, path string, params string, body *[]byte) (bool, error) {
 
 	if methodRoutes, ok := routes[method]; ok {
 
 		for _, route := range methodRoutes {
 
-			routeParams, _ := url.ParseQuery(params)
+			queryParams, _ := url.ParseQuery(params)
 
 			// TODO: Implement a check here that works with (and extracts) wildcards
 			if route.Path == path || route.Path == "/*" {
 
-				route.Route(request, response, body, routeParams)
+				for _, middleware := range route.Middleware {
 
-				return true
+					// Execute all middleware and halt execution if one of them
+					// returns FALSE
+					if middleware(request, body, queryParams) == false {
+						return false, errors.New("Access denied to route")
+					}
+
+				}
+
+				route.Action(request, response, body, queryParams)
+
+				return true, nil
 
 			}
 
@@ -47,6 +52,6 @@ func dispatch(request *http.Request, response *http.ResponseWriter, method strin
 
 	}
 
-	return false
+	return false, nil
 
 }

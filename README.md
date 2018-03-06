@@ -15,7 +15,9 @@ import (
 
 func main() {
 
-    jsonserver.RegisterRoute("GET", "/url-goes-here", func(request *http.Request, response *http.ResponseWriter, body *[]byte, params url.Values) {
+    middleware := []jsonserver.Middleware{} // Optional slice of Middleware functions
+
+    jsonserver.RegisterRoute("GET", "/url-goes-here", middleware, func(request *http.Request, response *http.ResponseWriter, body *[]byte, params url.Values) {
 
         jsonserver.WriteResponse(response, jsonserver.JSON{"foo":"bar","params":params}, http.StatusOK)
 
@@ -27,3 +29,5 @@ func main() {
 
 }
 ```
+
+Middleware functions have the signature `func(request *http.Request, body *[]byte, queryParams url.Values) bool` and will prevent the route from loading if they return `false`.

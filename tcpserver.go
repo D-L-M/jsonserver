@@ -7,11 +7,11 @@ import (
 	"net/http"
 )
 
-// Server defines the HTTP request handler
-type Server struct{}
+// TCP server
+type server struct{}
 
 // Start is the TCP server initialiser
-func (requestHandler *Server) Start(port int) {
+func (requestHandler *server) Start(port int) {
 
 	http.HandleFunc("/", requestHandler.dispatcher)
 
@@ -27,7 +27,7 @@ func (requestHandler *Server) Start(port int) {
 }
 
 // Handle incoming requests and route to the appropriate package
-func (requestHandler *Server) dispatcher(response http.ResponseWriter, request *http.Request) {
+func (requestHandler *server) dispatcher(response http.ResponseWriter, request *http.Request) {
 
 	body, err := ioutil.ReadAll(request.Body)
 
@@ -40,11 +40,18 @@ func (requestHandler *Server) dispatcher(response http.ResponseWriter, request *
 		method := request.Method
 		path := request.URL.Path[:]
 		params := request.URL.RawQuery
-		success := dispatch(request, &response, method, path, params, &body)
+		success, err := dispatch(request, &response, method, path, params, &body)
 
-		// No matching routes found
-		if success == false {
+		// Access denied by middleware
+		if err != nil {
+
+			WriteResponse(&response, JSON{"success": false, "message": "Access denied"}, http.StatusForbidden)
+
+			// No matching routes found
+		} else if success == false {
+
 			WriteResponse(&response, JSON{"success": false, "message": "Could not find " + path}, http.StatusNotFound)
+
 		}
 
 	}
@@ -54,7 +61,7 @@ func (requestHandler *Server) dispatcher(response http.ResponseWriter, request *
 // Start initialises the TCP server
 func Start(port int) {
 
-	requestHandler := &Server{}
+	requestHandler := &server{}
 
 	requestHandler.Start(port)
 
