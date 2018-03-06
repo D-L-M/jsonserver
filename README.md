@@ -17,9 +17,9 @@ func main() {
 
     middleware := []jsonserver.Middleware{} // Optional slice of Middleware functions
 
-    jsonserver.RegisterRoute("GET", "/url-goes-here", middleware, func(request *http.Request, response *http.ResponseWriter, body *[]byte, params url.Values) {
+    jsonserver.RegisterRoute("GET", "/url-goes-here", middleware, func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values) {
 
-        jsonserver.WriteResponse(response, jsonserver.JSON{"foo":"bar","params":params}, http.StatusOK)
+        jsonserver.WriteResponse(response, jsonserver.JSON{"foo": "bar", "query_params": queryParams}, http.StatusOK)
 
     })
 
