@@ -25,7 +25,7 @@ func RegisterRoute(method string, path string, middleware []Middleware, action R
 }
 
 // Dispatch will search for and execute a route
-func dispatch(request *http.Request, response *http.ResponseWriter, method string, path string, params string, body *[]byte) (bool, error) {
+func dispatch(request *http.Request, response *http.ResponseWriter, method string, path string, params string, body *[]byte) (bool, int, error) {
 
 	routesLock.RLock()
 
@@ -46,15 +46,17 @@ func dispatch(request *http.Request, response *http.ResponseWriter, method strin
 
 					// Execute all middleware and halt execution if one of them
 					// returns FALSE
-					if middleware(request, body, queryParams, routeParams) == false {
-						return false, errors.New("Access denied to route")
+					middlewareDecision, middlewareResponseCode := middleware(request, body, queryParams, routeParams)
+
+					if middlewareDecision == false {
+						return false, middlewareResponseCode, errors.New("Access denied to route")
 					}
 
 				}
 
 				route.Action(request, response, body, queryParams, routeParams)
 
-				return true, nil
+				return true, 0, nil
 
 			}
 
@@ -64,6 +66,6 @@ func dispatch(request *http.Request, response *http.ResponseWriter, method strin
 		routesLock.RUnlock()
 	}
 
-	return false, nil
+	return false, 0, nil
 
 }

@@ -40,12 +40,12 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 		method := request.Method
 		path := request.URL.Path[:]
 		params := request.URL.RawQuery
-		success, err := dispatch(request, &response, method, path, params, &body)
+		success, middlewareResponseCode, err := dispatch(request, &response, method, path, params, &body)
 
 		// Access denied by middleware
 		if err != nil {
 
-			WriteResponse(&response, JSON{"success": false, "message": "Access denied"}, http.StatusForbidden)
+			WriteResponse(&response, JSON{"success": false, "message": "Access denied"}, middlewareResponseCode)
 
 			// No matching routes found
 		} else if success == false {

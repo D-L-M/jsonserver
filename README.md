@@ -18,19 +18,21 @@ func main() {
 
     middleware := []jsonserver.Middleware{} // Optional slice of Middleware functions
 
-    jsonserver.RegisterRoute("GET", "/products/{id}", middleware, func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) {
-
-        jsonserver.WriteResponse(response, jsonserver.JSON{"foo": "bar", "query_params": queryParams, "route_params": routeParams}, http.StatusOK)
-
-    })
+    jsonserver.RegisterRoute("GET", "/products/{id}", middleware, products)
 
     jsonserver.Start(9999)
 
     select{}
 
 }
+
+func products(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) {
+
+        jsonserver.WriteResponse(response, jsonserver.JSON{"foo": "bar", "query_params": queryParams, "route_params": routeParams}, http.StatusOK)
+
+    }
 ```
 
 A route can listen on multiple HTTP methods by pipe-delimiting them, e.g. `GET|POST`.
 
-Middleware functions have the signature `func(request *http.Request, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) bool` and will prevent the route from loading if they return `false`.
+Middleware functions have the signature `func(request *http.Request, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) (bool, int)` and will prevent the route from loading if they return `false` as the boolean value (the int value should be a HTTP status code, which will be used if the middleware returns `false`, or otherwise ignored).

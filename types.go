@@ -15,4 +15,4 @@ type RouteParams map[string]string
 type RouteAction func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams)
 
 // Middleware is a function signature for HTTP middleware that can be assigned routes
-type Middleware func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams) bool
+type Middleware func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams) (bool, int)
