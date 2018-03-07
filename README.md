@@ -35,4 +35,6 @@ func products(request *http.Request, response *http.ResponseWriter, body *[]byte
 
 A route can listen on multiple HTTP methods by pipe-delimiting them, e.g. `GET|POST`.
 
+Named `{wildcard}` fragments in routes are provided in the `routeParams` map, and if a route path ends with `/:` all URL fragments at (and following) that point are collected into a route parameter named `{catchAll}`.
+
 Middleware functions have the signature `func(request *http.Request, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) (bool, int)` and will prevent the route from loading if they return `false` as the boolean value (the int value should be a HTTP status code, which will be used if the middleware returns `false`, or otherwise ignored).

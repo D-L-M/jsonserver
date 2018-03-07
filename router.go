@@ -37,7 +37,6 @@ func dispatch(request *http.Request, response *http.ResponseWriter, method strin
 
 			routeMatches, routeParams := route.MatchesPath(path)
 
-			// TODO: Implement a check here that works with (and extracts) wildcards
 			if routeMatches {
 
 				queryParams, _ := url.ParseQuery(params)
