@@ -11,7 +11,7 @@ import (
 type server struct{}
 
 // Start is the TCP server initialiser
-func (requestHandler *server) Start(port int) {
+func (requestHandler *server) Start(port int) *net.TCPListener {
 
 	http.HandleFunc("/", requestHandler.dispatcher)
 
@@ -23,6 +23,8 @@ func (requestHandler *server) Start(port int) {
 	}
 
 	go server.Serve(listener)
+
+	return listener
 
 }
 
@@ -40,7 +42,7 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 		method := request.Method
 		path := request.URL.Path[:]
 		params := request.URL.RawQuery
-		success, middlewareResponseCode, err := dispatch(request, &response, method, path, params, &body)
+		success, middlewareResponseCode, err := dispatch(*request, response, method, path, params, &body)
 
 		// Access denied by middleware
 		if err != nil {
@@ -59,10 +61,12 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 }
 
 // Start initialises the TCP server
-func Start(port int) {
+func Start(port int) *net.TCPListener {
 
 	requestHandler := &server{}
 
-	requestHandler.Start(port)
+	listener := requestHandler.Start(port)
+
+	return listener
 
 }
