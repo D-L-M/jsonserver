@@ -18,7 +18,7 @@ func (route *Route) MatchesPath(path string) (bool, RouteParams) {
 	normalisedPath := normalisePath(path)
 	pathFragments := strings.Split(normalisedPath, "/")
 	routePathFragments := strings.Split(normalisedRoutePath, "/")
-	hasFinalWildcard := strings.HasSuffix(normalisedRoutePath, "/:")
+	hasFinalWildcard := strings.HasSuffix(normalisedRoutePath, "/:") || normalisedRoutePath == ":"
 	lengthMatches := len(pathFragments) == len(routePathFragments)
 	lengthMatchesWithFinalWildcard := hasFinalWildcard && len(pathFragments) >= len(routePathFragments)
 	wildcardValues := RouteParams{}
@@ -67,6 +67,10 @@ func normalisePath(path string) string {
 
 	if strings.HasSuffix(path, "/") == false {
 		path += "/"
+	}
+
+	if path == "/" {
+		return ""
 	}
 
 	return path[1 : len(path)-1]
