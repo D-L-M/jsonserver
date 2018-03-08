@@ -1,6 +1,6 @@
 # jsonserver
 
-![](https://travis-ci.org/D-L-M/jsonserver.svg?branch=master) ![](https://coveralls.io/repos/github/D-L-M/jsonserver/badge.svg?branch=master)
+[![Build Status](https://travis-ci.org/D-L-M/jsonserver.svg?branch=master)](https://travis-ci.org/D-L-M/jsonserver) [![Coverage Status](https://coveralls.io/repos/github/D-L-M/jsonserver/badge.svg?branch=master)](https://coveralls.io/github/D-L-M/jsonserver?branch=master)
 
 jsonserver is a simple Golang HTTP server and routing component that can be used to create a JSON API.
 
