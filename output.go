@@ -6,15 +6,13 @@ import (
 )
 
 // WriteResponse writes a JSON response back to the client
-func WriteResponse(response *http.ResponseWriter, body JSON, statusCode int) {
+func WriteResponse(response http.ResponseWriter, body JSON, statusCode int) {
 
-	responseWriter := *response
-
-	responseWriter.Header().Set("Content-Type", "application/json")
-	responseWriter.WriteHeader(statusCode)
+	response.Header().Set("Content-Type", "application/json")
+	response.WriteHeader(statusCode)
 
 	jsonString, _ := json.Marshal(body)
 
-	responseWriter.Write(jsonString)
+	response.Write(jsonString)
 
 }

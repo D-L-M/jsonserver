@@ -28,7 +28,7 @@ func main() {
 
 func products(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) {
 
-        jsonserver.WriteResponse(response, jsonserver.JSON{"foo": "bar", "query_params": queryParams, "route_params": routeParams}, http.StatusOK)
+        jsonserver.WriteResponse(*response, jsonserver.JSON{"foo": "bar", "query_params": queryParams, "route_params": routeParams}, http.StatusOK)
 
     }
 ```
