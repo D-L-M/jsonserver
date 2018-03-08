@@ -1,8 +1,10 @@
 # jsonserver
 
-jsonserver is a simple Golang TCP server and routing component that can be used to create a simple JSON API.
+![](https://travis-ci.org/D-L-M/jsonserver.svg?branch=master)
 
-Simple usage is:
+jsonserver is a simple Golang HTTP server and routing component that can be used to create a JSON API.
+
+Basic usage is:
 
 ```go
 package main
