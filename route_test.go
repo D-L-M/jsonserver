@@ -6,6 +6,44 @@ import (
 	"testing"
 )
 
+// TestNoRouteMatch tests route path not matching against a URL
+func TestNoRouteMatch(t *testing.T) {
+
+	action := func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	}
+
+	route := Route{Path: "/foo", Action: action, Middleware: []Middleware{}}
+	matches, params := route.MatchesPath("/bar")
+
+	if matches != false {
+		t.Errorf("Erroneous route match (pattern %v should not cover URL %v)", "/foo", "/bar")
+	}
+
+	if len(params) != 0 {
+		t.Errorf("Param mismatch (expected: %v, actual: %v)", "[]", params)
+	}
+
+}
+
+// TestCloseNoRouteMatch tests route path not matching against a URL that almost matches
+func TestCloseNoRouteMatch(t *testing.T) {
+
+	action := func(request *http.Request, response *http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	}
+
+	route := Route{Path: "/foo/bar", Action: action, Middleware: []Middleware{}}
+	matches, params := route.MatchesPath("/foo")
+
+	if matches != false {
+		t.Errorf("Erroneous route match (pattern %v should not cover URL %v)", "/foo/bar", "/foo")
+	}
+
+	if len(params) != 0 {
+		t.Errorf("Param mismatch (expected: %v, actual: %v)", "[]", params)
+	}
+
+}
+
 // TestMatchesBaseURL tests route path matching against the base URL
 func TestMatchesBaseURL(t *testing.T) {
 
