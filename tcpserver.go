@@ -34,9 +34,7 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 	body, err := ioutil.ReadAll(request.Body)
 
 	if err != nil {
-
 		WriteResponse(response, &JSON{"success": false, "message": "Could not read request body"}, http.StatusBadRequest)
-
 	} else {
 
 		method := request.Method
