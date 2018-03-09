@@ -4,7 +4,7 @@
 
 jsonserver is a simple Golang HTTP server and routing component that can be used to create a JSON API.
 
-An example of basic usage with a few routes is:
+An example of basic usage with a couple of routes is:
 
 ```go
 package main
@@ -64,7 +64,7 @@ func products(request *http.Request, response *http.ResponseWriter, body *[]byte
 
 Middleware (if assigned) can block execution of a route if it returns `false`, and also returns the HTTP status code that will be returned to the client.
 
-Middleware slices are executed in the order that they are specified, so it would make sense, for example, to list generic logic middleware prior to permission-checking middleware — the first one to fail will halt execution of the route and any other middleware in the slice will not be run.
+Middleware slices are executed in the order that they are specified, so it would make sense, for example, to list generic login middleware prior to permission-checking middleware — the first one to fail will halt execution of the route and any other middleware in the slice will not be run.
 
 ## HTTP Methods
 
