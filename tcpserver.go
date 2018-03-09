@@ -60,7 +60,7 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 
 }
 
-// Start initialises the TCP server
+// Start initialises the HTTP server
 func Start(port int) *net.TCPListener {
 
 	requestHandler := &server{}
