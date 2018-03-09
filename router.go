@@ -14,7 +14,7 @@ var routesLock = sync.RWMutex{}
 // RegisterRoute stores a closure to execute against a method and path
 func RegisterRoute(method string, path string, middleware []Middleware, action RouteAction) {
 
-	methods := strings.Split(method, "|")
+	methods := strings.Split(strings.ToUpper(method), "|")
 
 	for _, method := range methods {
 		routesLock.Lock()
@@ -29,7 +29,7 @@ func dispatch(request http.Request, response http.ResponseWriter, method string,
 
 	routesLock.RLock()
 
-	if methodRoutes, ok := routes[method]; ok {
+	if methodRoutes, ok := routes[strings.ToUpper(method)]; ok {
 
 		routesLock.RUnlock()
 

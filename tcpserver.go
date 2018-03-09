@@ -35,7 +35,7 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 
 	if err != nil {
 
-		WriteResponse(response, JSON{"success": false, "message": "Could not read request body"}, http.StatusBadRequest)
+		WriteResponse(response, &JSON{"success": false, "message": "Could not read request body"}, http.StatusBadRequest)
 
 	} else {
 
@@ -47,12 +47,12 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 		// Access denied by middleware
 		if err != nil {
 
-			WriteResponse(response, JSON{"success": false, "message": "Access denied"}, middlewareResponseCode)
+			WriteResponse(response, &JSON{"success": false, "message": "Access denied"}, middlewareResponseCode)
 
 			// No matching routes found
 		} else if success == false {
 
-			WriteResponse(response, JSON{"success": false, "message": "Could not find " + path}, http.StatusNotFound)
+			WriteResponse(response, &JSON{"success": false, "message": "Could not find " + path}, http.StatusNotFound)
 
 		}
 

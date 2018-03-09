@@ -14,7 +14,7 @@ func TestWriteResponse(t *testing.T) {
 	body := JSON{"foo": "bar"}
 	statusCode := http.StatusAccepted
 
-	WriteResponse(responseWriter, body, statusCode)
+	WriteResponse(responseWriter, &body, statusCode)
 
 	if responseWriter.Body.String() != `{"foo":"bar"}` {
 		t.Errorf("Incorrect body (expected: %v, actual: %v)", `{"foo":"bar"}`, responseWriter.Body.String())
