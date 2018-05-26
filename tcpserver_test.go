@@ -2,7 +2,6 @@ package jsonserver
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 	"testing"
 )
@@ -12,14 +11,18 @@ func TestServerCanListen(t *testing.T) {
 
 	testRouteSetUp()
 
-	server := Start(9999)
+	server, err := Start(9999)
+
+	if err != nil {
+		t.Errorf("Unable to make start server")
+	}
 
 	defer server.Close()
 
 	response, err := http.Get("http://127.0.0.1:9999/")
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Unable to make request")
 	}
 
 	defer response.Body.Close()
@@ -27,7 +30,7 @@ func TestServerCanListen(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Unexpected error thrown when attempting to read response")
 	}
 
 	bodyString := string(body)
@@ -45,14 +48,18 @@ func TestServerReturnsNotFound(t *testing.T) {
 
 	testRouteSetUp()
 
-	server := Start(9999)
+	server, err := Start(9999)
+
+	if err != nil {
+		t.Errorf("Unable to make start server")
+	}
 
 	defer server.Close()
 
 	response, err := http.Get("http://127.0.0.1:9999/404")
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Unable to make request")
 	}
 
 	defer response.Body.Close()
@@ -61,7 +68,7 @@ func TestServerReturnsNotFound(t *testing.T) {
 	code := response.StatusCode
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Unexpected error thrown when attempting to read response")
 	}
 
 	bodyString := string(body)
@@ -83,14 +90,18 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 
 	testRouteSetUp()
 
-	server := Start(9999)
+	server, err := Start(9999)
+
+	if err != nil {
+		t.Errorf("Unable to make start server")
+	}
 
 	defer server.Close()
 
 	response, err := http.Get("http://127.0.0.1:9999/middleware_deny")
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Unable to make request")
 	}
 
 	defer response.Body.Close()
@@ -99,7 +110,7 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 	code := response.StatusCode
 
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Unexpected error thrown when attempting to read response")
 	}
 
 	bodyString := string(body)
@@ -110,6 +121,20 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 
 	if code != 401 {
 		t.Errorf("Route did not return middleware denial HTTP code")
+	}
+
+	testRouteTearDown()
+
+}
+
+// TestServerFailsOnOutOfBoundsPort tests that creating a server fails with an out-of-bounds port number
+func TestServerFailsOnOutOfBoundsPort(t *testing.T) {
+
+	server, err := Start(99999)
+
+	if err == nil {
+		defer server.Close()
+		t.Errorf("Server with out-of-bounds port number unexpectedly started")
 	}
 
 	testRouteTearDown()
