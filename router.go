@@ -39,13 +39,14 @@ func dispatch(request *http.Request, response http.ResponseWriter, method string
 
 			if routeMatches {
 
+				state := &RequestState{}
 				queryParams, _ := url.ParseQuery(params)
 
 				for _, middleware := range route.Middleware {
 
 					// Execute all middleware and halt execution if one of them
 					// returns FALSE
-					middlewareDecision, middlewareResponseCode := middleware(request, body, queryParams, routeParams)
+					middlewareDecision, middlewareResponseCode := middleware(request, body, queryParams, routeParams, state)
 
 					if middlewareDecision == false {
 						return false, middlewareResponseCode, errors.New("Access denied to route")
@@ -53,7 +54,7 @@ func dispatch(request *http.Request, response http.ResponseWriter, method string
 
 				}
 
-				route.Action(request, response, body, queryParams, routeParams)
+				route.Action(request, response, body, queryParams, routeParams, state)
 
 				return true, 0, nil
 

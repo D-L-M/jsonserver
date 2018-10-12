@@ -10,23 +10,23 @@ import (
 // Set up some routes
 func testRouteSetUp() {
 
-	RegisterRoute("GET", "/", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET", "/", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /"))
 	})
 
-	RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET|PUT /foo"))
 	})
 
-	RegisterRoute("GET", "/foo/{bar}", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET", "/foo/{bar}", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /foo/{bar} " + routeParams["bar"]))
 	})
 
-	RegisterRoute("GET", "/foo/{bar}/:", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET", "/foo/{bar}/:", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /foo/{bar}/: " + routeParams["bar"] + " " + routeParams["{catchAll}"]))
 	})
 
-	RegisterRoute("GET", "/all", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET", "/all", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 
 		requestURL := (*request).URL.String()
 		bodyString := string(*body)
@@ -36,19 +36,20 @@ func testRouteSetUp() {
 
 	})
 
-	allowMiddleware := func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams) (bool, int) {
+	allowMiddleware := func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
+		state.Set("foo", "bar")
 		return true, 0
 	}
 
-	denyMiddleware := func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams) (bool, int) {
+	denyMiddleware := func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
 		return false, 401
 	}
 
-	RegisterRoute("GET", "/middleware_allow", []Middleware{allowMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
-		response.Write([]byte("middleware_allow"))
+	RegisterRoute("GET", "/middleware_allow", []Middleware{allowMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+		response.Write([]byte("middleware_allow " + state.Get("foo").(string)))
 	})
 
-	RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("middleware_deny"))
 	})
 
@@ -57,7 +58,7 @@ func testRouteSetUp() {
 // TestRegisterRoute tests registering a route with the router
 func TestRegisterRoute(t *testing.T) {
 
-	RegisterRoute("GET", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	RegisterRoute("GET", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 	})
 
 	routesLock.RLock()
@@ -83,9 +84,9 @@ func TestRegisterRoute(t *testing.T) {
 // TestRegisterRouteToMultipleMethods tests registering a route with the router against multiple HTTP methods
 func TestRegisterRouteToMultipleMethods(t *testing.T) {
 
-	RegisterRoute("GET|PUT", "/bar", []Middleware{func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams) (bool, int) {
+	RegisterRoute("GET|PUT", "/bar", []Middleware{func(request *http.Request, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
 		return false, 401
-	}}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams) {
+	}}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 	})
 
 	routesLock.RLock()
@@ -372,7 +373,7 @@ func TestMiddlewarePermitsRoute(t *testing.T) {
 
 	success, code, err := dispatch(request, response, "GET", "/middleware_allow", "", &[]byte{})
 
-	if response.Body.String() != "middleware_allow" {
+	if response.Body.String() != "middleware_allow bar" {
 		t.Errorf("Correct route did not execute")
 	}
 
