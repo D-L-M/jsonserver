@@ -30,7 +30,7 @@ func main() {
 }
 
 // Middleware to ensure that the user is logged in
-func authenticationMiddleware(request *http.Request, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) (bool, int) {
+func authenticationMiddleware(request *http.Request, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) (bool, int) {
 
     if /* some authentication logic */ {
         return true, 0
@@ -41,7 +41,7 @@ func authenticationMiddleware(request *http.Request, body *[]byte, queryParams u
 }
 
 // Index route
-func index(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) {
+func index(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) {
 
     responseBody := jsonserver.JSON{"categories": "/categories", "basket": "/shopping-basket", "logout": "/log-out"}
 
@@ -50,7 +50,7 @@ func index(request *http.Request, response http.ResponseWriter, body *[]byte, qu
 }
 
 // Product route
-func products(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams) {
+func products(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) {
 
     product := GetProduct(routeParams["id"])
     responseBody := jsonserver.JSON{"id": product.ID, "name": product.Name, "price": product.Price}
@@ -79,3 +79,7 @@ If a route path ends with `/:` all URL fragments at (and following) that point a
 ## Query Parameters
 
 Query string parameters from a URL are made available as a `url.Values` object in the `queryParams` argument. To get a single value, the key can be passed to `queryParams.Get()`.
+
+## Request State
+
+A `*jsonserver.RequestState` object is passed to each middleware invocation and also the matching route action. It has `Set()` and `Get()` methods available that allow any state data to be stored for the duration of the associated request.
