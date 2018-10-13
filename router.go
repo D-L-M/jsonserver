@@ -46,7 +46,7 @@ func dispatch(request *http.Request, response http.ResponseWriter, method string
 
 					// Execute all middleware and halt execution if one of them
 					// returns FALSE
-					middlewareDecision, middlewareResponseCode := middleware(request, body, queryParams, routeParams, state)
+					middlewareDecision, middlewareResponseCode := middleware(request, response, body, queryParams, routeParams, state)
 
 					if middlewareDecision == false {
 						return false, middlewareResponseCode, errors.New("Access denied to route")

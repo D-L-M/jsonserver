@@ -30,7 +30,7 @@ func main() {
 }
 
 // Middleware to ensure that the user is logged in
-func authenticationMiddleware(request *http.Request, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) (bool, int) {
+func authenticationMiddleware(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) (bool, int) {
 
     if /* some authentication logic */ {
         return true, 0
