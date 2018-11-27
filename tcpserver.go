@@ -1,6 +1,7 @@
 package jsonserver
 
 import (
+	"bytes"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -36,6 +37,10 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 		WriteResponse(response, &JSON{"success": false, "message": "Could not read request body"}, http.StatusBadRequest)
 	} else {
 
+		// Write the body back to the request for later use
+		request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+		// Extract request details and dispatch to the appropriate route
 		method := request.Method
 		path := request.URL.Path[:]
 		params := request.URL.RawQuery
