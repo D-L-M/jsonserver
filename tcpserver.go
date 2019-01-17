@@ -15,7 +15,12 @@ func (requestHandler *server) Start(port int) (*net.TCPListener, error) {
 
 	http.HandleFunc("/", requestHandler.dispatcher)
 
-	server := &http.Server{}
+	server := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{IP: net.IPv4(0, 0, 0, 0), Port: port})
 
 	if err != nil {
