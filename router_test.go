@@ -67,6 +67,8 @@ func testRouteSetUp() {
 
 		ServerStarted = true
 
+		time.Sleep(2 * time.Second)
+
 	}
 
 }
