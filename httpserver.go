@@ -3,39 +3,17 @@ package jsonserver
 import (
 	"bytes"
 	"io/ioutil"
-	"net"
+	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
-// TCP server
+// HTTP server
 type server struct{}
 
-// Start is the TCP server initialiser
-func (requestHandler *server) Start(port int) (*net.TCPListener, error) {
-
-	http.HandleFunc("/", requestHandler.dispatcher)
-
-	server := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  120 * time.Second,
-	}
-
-	listener, err := net.ListenTCP("tcp", &net.TCPAddr{IP: net.IPv4(0, 0, 0, 0), Port: port})
-
-	if err != nil {
-		return nil, err
-	}
-
-	go server.Serve(listener)
-
-	return listener, nil
-
-}
-
 // Handle incoming requests and route to the appropriate package
-func (requestHandler *server) dispatcher(response http.ResponseWriter, request *http.Request) {
+func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
 	body, err := ioutil.ReadAll(request.Body)
 
@@ -69,12 +47,21 @@ func (requestHandler *server) dispatcher(response http.ResponseWriter, request *
 }
 
 // Start initialises the HTTP server
-func Start(port int) (*net.TCPListener, error) {
+func Start(port int, timeout int) {
 
 	requestHandler := &server{}
+	timeoutDuration := time.Duration(time.Duration(timeout) * time.Second)
 
-	listener, err := requestHandler.Start(port)
+	http.Handle("/", http.TimeoutHandler(requestHandler, timeoutDuration, "Request timed out"))
 
-	return listener, err
+	go func() {
+
+		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}()
 
 }

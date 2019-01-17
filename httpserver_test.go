@@ -11,14 +11,6 @@ func TestServerCanListen(t *testing.T) {
 
 	testRouteSetUp()
 
-	server, err := Start(9999)
-
-	if err != nil {
-		t.Errorf("Unable to make start server")
-	}
-
-	defer server.Close()
-
 	response, err := http.Get("http://127.0.0.1:9999/")
 
 	if err != nil {
@@ -43,18 +35,26 @@ func TestServerCanListen(t *testing.T) {
 
 }
 
+// TestServerTimesOut tests starting and making a request to the server that
+// times out
+func TestServerTimesOut(t *testing.T) {
+
+	testRouteSetUp()
+
+	response, _ := http.Get("http://127.0.0.1:9999/timeout")
+
+	if response.StatusCode != 503 {
+		t.Errorf("Request did not timeout like expected")
+	}
+
+	testRouteTearDown()
+
+}
+
 // TestServerReturnsNotFound tests receiving a 404 response from the server for a bad route
 func TestServerReturnsNotFound(t *testing.T) {
 
 	testRouteSetUp()
-
-	server, err := Start(9999)
-
-	if err != nil {
-		t.Errorf("Unable to make start server")
-	}
-
-	defer server.Close()
 
 	response, err := http.Get("http://127.0.0.1:9999/404")
 
@@ -90,14 +90,6 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 
 	testRouteSetUp()
 
-	server, err := Start(9999)
-
-	if err != nil {
-		t.Errorf("Unable to make start server")
-	}
-
-	defer server.Close()
-
 	response, err := http.Get("http://127.0.0.1:9999/middleware_deny")
 
 	if err != nil {
@@ -121,20 +113,6 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 
 	if code != 401 {
 		t.Errorf("Route did not return middleware denial HTTP code")
-	}
-
-	testRouteTearDown()
-
-}
-
-// TestServerFailsOnOutOfBoundsPort tests that creating a server fails with an out-of-bounds port number
-func TestServerFailsOnOutOfBoundsPort(t *testing.T) {
-
-	server, err := Start(99999)
-
-	if err == nil {
-		defer server.Close()
-		t.Errorf("Server with out-of-bounds port number unexpectedly started")
 	}
 
 	testRouteTearDown()

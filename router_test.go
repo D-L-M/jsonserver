@@ -5,13 +5,21 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 )
+
+var ServerStarted bool
 
 // Set up some routes
 func testRouteSetUp() {
 
 	RegisterRoute("GET", "/", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /"))
+	})
+
+	RegisterRoute("GET", "/timeout", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+		time.Sleep(30 * time.Second)
+		response.Write([]byte("GET /timeout"))
 	})
 
 	RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
@@ -52,6 +60,14 @@ func testRouteSetUp() {
 	RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("middleware_deny"))
 	})
+
+	if !ServerStarted {
+
+		Start(9999, 5)
+
+		ServerStarted = true
+
+	}
 
 }
 
@@ -429,7 +445,5 @@ func testRouteTearDown() {
 	routesLock.Lock()
 	routes = map[string][]Route{}
 	routesLock.Unlock()
-
-	http.DefaultServeMux = new(http.ServeMux)
 
 }

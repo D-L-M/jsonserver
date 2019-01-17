@@ -18,12 +18,14 @@ import (
 
 func main() {
 
+    port := 9999
+    timeout := 30
     middleware := []jsonserver.Middleware{authenticationMiddleware}
 
     jsonserver.RegisterRoute("GET", "/", middleware, index)
     jsonserver.RegisterRoute("GET", "/products/{id}", middleware, products)
 
-    jsonserver.Start(9999) // Port number
+    jsonserver.Start(port, timeout)
 
     select{}
 
