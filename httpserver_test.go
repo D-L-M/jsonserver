@@ -14,21 +14,29 @@ func TestServerCanListen(t *testing.T) {
 	response, err := http.Get("http://127.0.0.1:9999/")
 
 	if err != nil {
+
 		t.Errorf("Unable to make request")
-	}
 
-	defer response.Body.Close()
+	} else {
 
-	body, err := ioutil.ReadAll(response.Body)
+		defer response.Body.Close()
 
-	if err != nil {
-		t.Errorf("Unexpected error thrown when attempting to read response")
-	}
+		body, err := ioutil.ReadAll(response.Body)
 
-	bodyString := string(body)
+		if err != nil {
 
-	if bodyString != "GET /" {
-		t.Errorf("Could not reach route")
+			t.Errorf("Unexpected error thrown when attempting to read response")
+
+		} else {
+
+			bodyString := string(body)
+
+			if bodyString != "GET /" {
+				t.Errorf("Could not reach route")
+			}
+
+		}
+
 	}
 
 	testRouteTearDown()
@@ -59,26 +67,34 @@ func TestServerReturnsNotFound(t *testing.T) {
 	response, err := http.Get("http://127.0.0.1:9999/404")
 
 	if err != nil {
+
 		t.Errorf("Unable to make request")
-	}
 
-	defer response.Body.Close()
+	} else {
 
-	body, err := ioutil.ReadAll(response.Body)
-	code := response.StatusCode
+		defer response.Body.Close()
 
-	if err != nil {
-		t.Errorf("Unexpected error thrown when attempting to read response")
-	}
+		body, err := ioutil.ReadAll(response.Body)
+		code := response.StatusCode
 
-	bodyString := string(body)
+		if err != nil {
 
-	if bodyString != `{"message":"Could not find /404","success":false}` {
-		t.Errorf("Route did not return 'not found' message")
-	}
+			t.Errorf("Unexpected error thrown when attempting to read response")
 
-	if code != 404 {
-		t.Errorf("Route did not return 404 HTTP code")
+		} else {
+
+			bodyString := string(body)
+
+			if bodyString != `{"message":"Could not find /404","success":false}` {
+				t.Errorf("Route did not return 'not found' message")
+			}
+
+			if code != 404 {
+				t.Errorf("Route did not return 404 HTTP code")
+			}
+
+		}
+
 	}
 
 	testRouteTearDown()
@@ -93,26 +109,34 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 	response, err := http.Get("http://127.0.0.1:9999/middleware_deny")
 
 	if err != nil {
+
 		t.Errorf("Unable to make request")
-	}
 
-	defer response.Body.Close()
+	} else {
 
-	body, err := ioutil.ReadAll(response.Body)
-	code := response.StatusCode
+		defer response.Body.Close()
 
-	if err != nil {
-		t.Errorf("Unexpected error thrown when attempting to read response")
-	}
+		body, err := ioutil.ReadAll(response.Body)
+		code := response.StatusCode
 
-	bodyString := string(body)
+		if err != nil {
 
-	if bodyString != `{"message":"Access denied","success":false}` {
-		t.Errorf("Route did not return middleware denial message")
-	}
+			t.Errorf("Unexpected error thrown when attempting to read response")
 
-	if code != 401 {
-		t.Errorf("Route did not return middleware denial HTTP code")
+		} else {
+
+			bodyString := string(body)
+
+			if bodyString != `{"message":"Access denied","success":false}` {
+				t.Errorf("Route did not return middleware denial message")
+			}
+
+			if code != 401 {
+				t.Errorf("Route did not return middleware denial HTTP code")
+			}
+
+		}
+
 	}
 
 	testRouteTearDown()
