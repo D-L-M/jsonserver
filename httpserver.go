@@ -59,12 +59,13 @@ func (server *Server) ServeHTTP(response http.ResponseWriter, request *http.Requ
 func (server *Server) Start(port int, timeout int) {
 
 	timeoutDuration := time.Duration(time.Duration(timeout) * time.Second)
+	mux := http.NewServeMux()
 
-	http.Handle("/", http.TimeoutHandler(server, timeoutDuration, "Request timed out"))
+	mux.Handle("/", http.TimeoutHandler(server, timeoutDuration, "Request timed out"))
 
 	go func() {
 
-		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
+		err := http.ListenAndServe(":"+strconv.Itoa(port), mux)
 
 		if err != nil {
 			log.Fatal(err)

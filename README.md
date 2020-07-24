@@ -22,7 +22,7 @@ func main() {
     timeout := 30
     middleware := []jsonserver.Middleware{authenticationMiddleware}
 
-    server := &jsonserver.NewServer()
+    server := jsonserver.NewServer()
 
     server.Router.RegisterRoute("GET", "/", middleware, index)
     server.Router.RegisterRoute("GET", "/products/{id}", middleware, products)
