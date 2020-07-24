@@ -9,11 +9,27 @@ import (
 	"time"
 )
 
-// HTTP server
-type server struct{}
+// Server represents a HTTP server
+type Server struct {
+	Router *Router
+}
+
+// NewServer creates a new server
+func NewServer() *Server {
+
+	return &Server{Router: &Router{}}
+
+}
+
+// RegisterRoute stores a closure to execute against a method and path
+func (server *Server) RegisterRoute(method string, path string, middleware []Middleware, action RouteAction) {
+
+	server.Router.RegisterRoute(method, path, middleware, action)
+
+}
 
 // Handle incoming requests and route to the appropriate package
-func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+func (server *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
 	body, err := ioutil.ReadAll(request.Body)
 
@@ -28,7 +44,7 @@ func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *h
 		method := request.Method
 		path := request.URL.Path[:]
 		params := request.URL.RawQuery
-		success, middlewareResponseCode, err := dispatch(request, response, method, path, params, &body)
+		success, middlewareResponseCode, err := server.Router.Dispatch(request, response, method, path, params, &body)
 
 		// Access denied by middleware
 		if err != nil {
@@ -47,16 +63,16 @@ func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *h
 }
 
 // Start initialises the HTTP server
-func Start(port int, timeout int) {
+func (server *Server) Start(port int, timeout int) {
 
-	requestHandler := &server{}
 	timeoutDuration := time.Duration(time.Duration(timeout) * time.Second)
+	mux := http.NewServeMux()
 
-	http.Handle("/", http.TimeoutHandler(requestHandler, timeoutDuration, "Request timed out"))
+	mux.Handle("/", http.TimeoutHandler(server, timeoutDuration, "Request timed out"))
 
 	go func() {
 
-		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
+		err := http.ListenAndServe(":"+strconv.Itoa(port), mux)
 
 		if err != nil {
 			log.Fatal(err)

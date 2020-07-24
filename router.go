@@ -8,30 +8,41 @@ import (
 	"sync"
 )
 
-var routes = map[string][]Route{}
-var routesLock = sync.RWMutex{}
+// Router represents an instance of a router
+type Router struct {
+	Routes     map[string][]Route
+	RoutesLock sync.RWMutex
+}
 
 // RegisterRoute stores a closure to execute against a method and path
-func RegisterRoute(method string, path string, middleware []Middleware, action RouteAction) {
+func (router *Router) RegisterRoute(method string, path string, middleware []Middleware, action RouteAction) {
 
 	methods := strings.Split(strings.ToUpper(method), "|")
 
 	for _, method := range methods {
-		routesLock.Lock()
-		routes[method] = append(routes[method], Route{Path: path, Action: action, Middleware: middleware})
-		routesLock.Unlock()
+
+		router.RoutesLock.Lock()
+
+		if router.Routes == nil {
+			router.Routes = map[string][]Route{}
+		}
+
+		router.Routes[method] = append(router.Routes[method], Route{Path: path, Action: action, Middleware: middleware})
+
+		router.RoutesLock.Unlock()
+
 	}
 
 }
 
 // Dispatch will search for and execute a route
-func dispatch(request *http.Request, response http.ResponseWriter, method string, path string, params string, body *[]byte) (bool, int, error) {
+func (router *Router) Dispatch(request *http.Request, response http.ResponseWriter, method string, path string, params string, body *[]byte) (bool, int, error) {
 
-	routesLock.RLock()
+	router.RoutesLock.RLock()
 
-	if methodRoutes, ok := routes[strings.ToUpper(method)]; ok {
+	if methodRoutes, ok := router.Routes[strings.ToUpper(method)]; ok {
 
-		routesLock.RUnlock()
+		router.RoutesLock.RUnlock()
 
 		for _, route := range methodRoutes {
 
@@ -63,7 +74,7 @@ func dispatch(request *http.Request, response http.ResponseWriter, method string
 		}
 
 	} else {
-		routesLock.RUnlock()
+		router.RoutesLock.RUnlock()
 	}
 
 	return false, 0, nil

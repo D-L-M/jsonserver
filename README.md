@@ -22,10 +22,12 @@ func main() {
     timeout := 30
     middleware := []jsonserver.Middleware{authenticationMiddleware}
 
-    jsonserver.RegisterRoute("GET", "/", middleware, index)
-    jsonserver.RegisterRoute("GET", "/products/{id}", middleware, products)
+    server := jsonserver.NewServer()
 
-    jsonserver.Start(port, timeout)
+    server.RegisterRoute("GET", "/", middleware, index)
+    server.RegisterRoute("GET", "/products/{id}", middleware, products)
+
+    server.Start(port, timeout)
 
     select{}
 
@@ -70,7 +72,7 @@ Middleware slices are executed in the order that they are specified, so it would
 
 ## HTTP Methods
 
-The HTTP method on which a route will listen is provided as the first argument to `jsonserver.RegisterRoute()`. To register a route against multiple HTTP methods you can provide them in the following format: `GET|OPTIONS|DELETE`.
+The HTTP method on which a route will listen is provided as the first argument to `server.RegisterRoute()`. To register a route against multiple HTTP methods you can provide them in the following format: `GET|OPTIONS|DELETE`.
 
 ## Route Parameters
 
