@@ -21,6 +21,13 @@ func NewServer() *Server {
 
 }
 
+// RegisterRoute stores a closure to execute against a method and path
+func (server *Server) RegisterRoute(method string, path string, middleware []Middleware, action RouteAction) {
+
+	server.Router.RegisterRoute(method, path, middleware, action)
+
+}
+
 // Handle incoming requests and route to the appropriate package
 func (server *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
