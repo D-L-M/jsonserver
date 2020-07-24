@@ -9,34 +9,33 @@ import (
 )
 
 var ServerStarted bool
-var TestRouter *Router = &Router{}
-var TestServer *Server = &Server{Router: TestRouter}
+var TestServer *Server = NewServer()
 
 // Set up some routes
 func testRouteSetUp() {
 
-	TestRouter.RegisterRoute("GET", "/", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /"))
 	})
 
-	TestRouter.RegisterRoute("GET", "/timeout", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/timeout", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		time.Sleep(30 * time.Second)
 		response.Write([]byte("GET /timeout"))
 	})
 
-	TestRouter.RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET|PUT /foo"))
 	})
 
-	TestRouter.RegisterRoute("GET", "/foo/{bar}", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/foo/{bar}", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /foo/{bar} " + routeParams["bar"]))
 	})
 
-	TestRouter.RegisterRoute("GET", "/foo/{bar}/:", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/foo/{bar}/:", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("GET /foo/{bar}/: " + routeParams["bar"] + " " + routeParams["{catchAll}"]))
 	})
 
-	TestRouter.RegisterRoute("GET", "/all", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/all", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 
 		requestURL := (*request).URL.String()
 		bodyString := string(*body)
@@ -55,11 +54,11 @@ func testRouteSetUp() {
 		return false, 401
 	}
 
-	TestRouter.RegisterRoute("GET", "/middleware_allow", []Middleware{allowMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/middleware_allow", []Middleware{allowMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("middleware_allow " + state.Get("foo").(string)))
 	})
 
-	TestRouter.RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 		response.Write([]byte("middleware_deny"))
 	})
 
@@ -78,12 +77,12 @@ func testRouteSetUp() {
 // TestRegisterRoute tests registering a route with the router
 func TestRegisterRoute(t *testing.T) {
 
-	TestRouter.RegisterRoute("GET", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.Router.RegisterRoute("GET", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 	})
 
-	TestRouter.RoutesLock.RLock()
-	route := TestRouter.Routes["GET"][0]
-	TestRouter.RoutesLock.RUnlock()
+	TestServer.Router.RoutesLock.RLock()
+	route := TestServer.Router.Routes["GET"][0]
+	TestServer.Router.RoutesLock.RUnlock()
 
 	if route.Path != "/foo" {
 		t.Errorf("Route path mismatch (expected: %v, actual: %v)", "/foo", route.Path)
@@ -104,15 +103,15 @@ func TestRegisterRoute(t *testing.T) {
 // TestRegisterRouteToMultipleMethods tests registering a route with the router against multiple HTTP methods
 func TestRegisterRouteToMultipleMethods(t *testing.T) {
 
-	TestRouter.RegisterRoute("GET|PUT", "/bar", []Middleware{func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
+	TestServer.Router.RegisterRoute("GET|PUT", "/bar", []Middleware{func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
 		return false, 401
 	}}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
 	})
 
-	TestRouter.RoutesLock.RLock()
-	getRoute := TestRouter.Routes["GET"][0]
-	putRoute := TestRouter.Routes["PUT"][0]
-	TestRouter.RoutesLock.RUnlock()
+	TestServer.Router.RoutesLock.RLock()
+	getRoute := TestServer.Router.Routes["GET"][0]
+	putRoute := TestServer.Router.Routes["PUT"][0]
+	TestServer.Router.RoutesLock.RUnlock()
 
 	if getRoute.Path != "/bar" {
 		t.Errorf("Route path mismatch (expected: %v, actual: %v)", "/foo", getRoute.Path)
@@ -150,7 +149,7 @@ func TestDispatchUnmatchedRoute(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/no_match", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/no_match", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/no_match", "", &[]byte{})
 
 	if response.Body.String() != "" {
 		t.Errorf("Route erroneously executed")
@@ -180,7 +179,7 @@ func TestDispatchRouteForMethodWithNoRoutes(t *testing.T) {
 	request := httptest.NewRequest("OPTIONS", "http://localhost:9999/", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "OPTIONS", "/", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "OPTIONS", "/", "", &[]byte{})
 
 	if response.Body.String() != "" {
 		t.Errorf("Route erroneously executed")
@@ -210,7 +209,7 @@ func TestDispatchBasicRoute(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/", "", &[]byte{})
 
 	if response.Body.String() != "GET /" {
 		t.Errorf("Correct route did not execute")
@@ -240,7 +239,7 @@ func TestDispatchMultiMethodGetRoute(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/foo", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/foo", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/foo", "", &[]byte{})
 
 	if response.Body.String() != "GET|PUT /foo" {
 		t.Errorf("Correct route did not execute")
@@ -270,7 +269,7 @@ func TestDispatchMultiMethodPutRoute(t *testing.T) {
 	request := httptest.NewRequest("PUT", "http://localhost:9999/foo", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "PUT", "/foo", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "PUT", "/foo", "", &[]byte{})
 
 	if response.Body.String() != "GET|PUT /foo" {
 		t.Errorf("Correct route did not execute")
@@ -300,7 +299,7 @@ func TestDispatchRouteWithWildcard(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/foo/baz", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/foo/baz", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/foo/baz", "", &[]byte{})
 
 	if response.Body.String() != "GET /foo/{bar} baz" {
 		t.Errorf("Correct route did not execute")
@@ -330,7 +329,7 @@ func TestDispatchRouteWithWildcardAndFinalWildcard(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/foo/bar/baz/foo", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/foo/bar/baz/foo", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/foo/bar/baz/foo", "", &[]byte{})
 
 	if response.Body.String() != "GET /foo/{bar}/: bar baz/foo" {
 		t.Errorf("Correct route did not execute")
@@ -361,7 +360,7 @@ func TestDispatchRouteParams(t *testing.T) {
 	response := httptest.NewRecorder()
 	body := []byte("Body Text")
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/all", "foo=bar", &body)
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/all", "foo=bar", &body)
 
 	if response.Body.String() != "http://localhost:9999/all?foo=bar Body Text bar" {
 		t.Errorf("Correct route did not execute")
@@ -391,7 +390,7 @@ func TestMiddlewarePermitsRoute(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/middleware_allow", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/middleware_allow", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/middleware_allow", "", &[]byte{})
 
 	if response.Body.String() != "middleware_allow bar" {
 		t.Errorf("Correct route did not execute")
@@ -421,7 +420,7 @@ func TestMiddlewareDeniesRoute(t *testing.T) {
 	request := httptest.NewRequest("GET", "http://localhost:9999/middleware_deny", nil)
 	response := httptest.NewRecorder()
 
-	success, code, err := TestRouter.Dispatch(request, response, "GET", "/middleware_deny", "", &[]byte{})
+	success, code, err := TestServer.Router.Dispatch(request, response, "GET", "/middleware_deny", "", &[]byte{})
 
 	if response.Body.String() != "" {
 		t.Errorf("Correct route did not execute")
@@ -446,8 +445,8 @@ func TestMiddlewareDeniesRoute(t *testing.T) {
 // Reset the routes
 func testRouteTearDown() {
 
-	TestRouter.RoutesLock.Lock()
-	TestRouter.Routes = map[string][]Route{}
-	TestRouter.RoutesLock.Unlock()
+	TestServer.Router.RoutesLock.Lock()
+	TestServer.Router.Routes = map[string][]Route{}
+	TestServer.Router.RoutesLock.Unlock()
 
 }

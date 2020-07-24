@@ -14,6 +14,13 @@ type Server struct {
 	Router *Router
 }
 
+// NewServer creates a new server
+func NewServer() *Server {
+
+	return &Server{Router: &Router{}}
+
+}
+
 // Handle incoming requests and route to the appropriate package
 func (server *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
