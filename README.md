@@ -72,7 +72,7 @@ Middleware slices are executed in the order that they are specified, so it would
 
 ## HTTP Methods
 
-The HTTP method on which a route will listen is provided as the first argument to `jsonserver.RegisterRoute()`. To register a route against multiple HTTP methods you can provide them in the following format: `GET|OPTIONS|DELETE`.
+The HTTP method on which a route will listen is provided as the first argument to `server.Router.RegisterRoute()`. To register a route against multiple HTTP methods you can provide them in the following format: `GET|OPTIONS|DELETE`.
 
 ## Route Parameters
 
