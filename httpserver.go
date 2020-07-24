@@ -9,11 +9,13 @@ import (
 	"time"
 )
 
-// HTTP server
-type server struct{}
+// Server represents a HTTP server
+type Server struct {
+	Router *Router
+}
 
 // Handle incoming requests and route to the appropriate package
-func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+func (server *Server) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
 	body, err := ioutil.ReadAll(request.Body)
 
@@ -28,7 +30,7 @@ func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *h
 		method := request.Method
 		path := request.URL.Path[:]
 		params := request.URL.RawQuery
-		success, middlewareResponseCode, err := dispatch(request, response, method, path, params, &body)
+		success, middlewareResponseCode, err := server.Router.Dispatch(request, response, method, path, params, &body)
 
 		// Access denied by middleware
 		if err != nil {
@@ -47,12 +49,11 @@ func (requestHandler *server) ServeHTTP(response http.ResponseWriter, request *h
 }
 
 // Start initialises the HTTP server
-func Start(port int, timeout int) {
+func (server *Server) Start(port int, timeout int) {
 
-	requestHandler := &server{}
 	timeoutDuration := time.Duration(time.Duration(timeout) * time.Second)
 
-	http.Handle("/", http.TimeoutHandler(requestHandler, timeoutDuration, "Request timed out"))
+	http.Handle("/", http.TimeoutHandler(server, timeoutDuration, "Request timed out"))
 
 	go func() {
 
