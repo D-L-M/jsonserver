@@ -20,8 +20,8 @@ func TestWriteResponse(t *testing.T) {
 		t.Errorf("Incorrect body (expected: %v, actual: %v)", `{"foo":"bar"}`, responseWriter.Body.String())
 	}
 
-	if responseWriter.Header().Get("Content-Type") != "application/json" {
-		t.Errorf("Incorrect content-type header (expected: %v, actual: %v)", "application/json", responseWriter.Header().Get("Content-Type"))
+	if responseWriter.Header().Get("Content-Type") != "application/json; charset=UTF-8" {
+		t.Errorf("Incorrect content-type header (expected: %v, actual: %v)", "application/json; charset=UTF-8", responseWriter.Header().Get("Content-Type"))
 	}
 
 	if responseWriter.Code != http.StatusAccepted {

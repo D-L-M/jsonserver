@@ -1,3 +1,3 @@
 module github.com/D-L-M/jsonserver
 
-go 1.14
+go 1.15
