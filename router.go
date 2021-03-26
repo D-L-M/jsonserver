@@ -1,6 +1,7 @@
 package jsonserver
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
@@ -50,14 +51,18 @@ func (router *Router) Dispatch(request *http.Request, response http.ResponseWrit
 
 			if routeMatches {
 
-				state := &RequestState{}
 				queryParams, _ := url.ParseQuery(params)
+
+				ctx := context.Background()
+				ctx = context.WithValue(ctx, "state", &RequestState{})
+				ctx = context.WithValue(ctx, "routeParams", routeParams)
+				ctx = context.WithValue(ctx, "queryParams", &queryParams)
 
 				for _, middleware := range route.Middleware {
 
 					// Execute all middleware and halt execution if one of them
 					// returns FALSE
-					middlewareDecision, middlewareResponseCode := middleware(request, response, body, queryParams, routeParams, state)
+					middlewareDecision, middlewareResponseCode := middleware(ctx, request, response, body)
 
 					if middlewareDecision == false {
 						return false, middlewareResponseCode, errors.New("Access denied to route")
@@ -65,7 +70,7 @@ func (router *Router) Dispatch(request *http.Request, response http.ResponseWrit
 
 				}
 
-				route.Action(request, response, body, queryParams, routeParams, state)
+				route.Action(ctx, request, response, body)
 
 				return true, 0, nil
 

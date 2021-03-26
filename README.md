@@ -10,6 +10,7 @@ An example of basic usage with a couple of routes is:
 package main
 
 import (
+    "context"
     "net/http"
     "net/url"
 
@@ -34,7 +35,7 @@ func main() {
 }
 
 // Middleware to ensure that the user is logged in
-func authenticationMiddleware(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) (bool, int) {
+func authenticationMiddleware(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) (bool, int) {
 
     if /* some authentication logic */ {
         return true, 0
@@ -45,7 +46,7 @@ func authenticationMiddleware(request *http.Request, response http.ResponseWrite
 }
 
 // Index route
-func index(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) {
+func index(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 
     responseBody := jsonserver.JSON{"categories": "/categories", "basket": "/shopping-basket", "logout": "/log-out"}
 
@@ -54,9 +55,9 @@ func index(request *http.Request, response http.ResponseWriter, body *[]byte, qu
 }
 
 // Product route
-func products(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams jsonserver.RouteParams, state *jsonserver.RequestState) {
+func products(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 
-    product := GetProduct(routeParams["id"])
+    product := GetProduct(ctx.Value("routeParams").(RouteParams)["id"])
     responseBody := jsonserver.JSON{"id": product.ID, "name": product.Name, "price": product.Price}
 
     jsonserver.WriteResponse(response, &responseBody, http.StatusOK)
@@ -76,14 +77,14 @@ The HTTP method on which a route will listen is provided as the first argument t
 
 ## Route Parameters
 
-The values of named `{wildcard}` fragments in routes are provided in the `routeParams` map, where the wildcard names (excluding curly braces) form the keys.
+The values of named `{wildcard}` fragments in routes are provided in the `routeParams` context value, where the wildcard names (excluding curly braces) form the keys.
 
 If a route path ends with `/:` all URL fragments at (and following) that point are collected into a route parameter named `{catchAll}` (with curly braces).
 
 ## Query Parameters
 
-Query string parameters from a URL are made available as a `url.Values` object in the `queryParams` argument. To get a single value, the key can be passed to `queryParams.Get()`.
+Query string parameters from a URL are made available as a `*url.Values` pointer in the `queryParams` context value.
 
 ## Request State
 
-A `*jsonserver.RequestState` object is passed to each middleware invocation and also the matching route action. It has `Set()` and `Get()` methods available that allow any state data to be stored for the duration of the associated request.
+A `*jsonserver.RequestState` pointer is made available in the `state` context value. It has `Set()` and `Get()` methods available that allow any state data to be stored for the duration of the associated request.
