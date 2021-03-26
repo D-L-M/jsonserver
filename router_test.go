@@ -1,6 +1,7 @@
 package jsonserver
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,51 +15,51 @@ var TestServer *Server = NewServer()
 // Set up some routes
 func testRouteSetUp() {
 
-	TestServer.RegisterRoute("GET", "/", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.RegisterRoute("GET", "/", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 		response.Write([]byte("GET /"))
 	})
 
-	TestServer.RegisterRoute("GET", "/timeout", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.RegisterRoute("GET", "/timeout", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 		time.Sleep(30 * time.Second)
 		response.Write([]byte("GET /timeout"))
 	})
 
-	TestServer.RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.RegisterRoute("GET|PUT", "/foo", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 		response.Write([]byte("GET|PUT /foo"))
 	})
 
-	TestServer.RegisterRoute("GET", "/foo/{bar}", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-		response.Write([]byte("GET /foo/{bar} " + routeParams["bar"]))
+	TestServer.RegisterRoute("GET", "/foo/{bar}", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
+		response.Write([]byte("GET /foo/{bar} " + ctx.Value("routeParams").(RouteParams)["bar"]))
 	})
 
-	TestServer.RegisterRoute("GET", "/foo/{bar}/:", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-		response.Write([]byte("GET /foo/{bar}/: " + routeParams["bar"] + " " + routeParams["{catchAll}"]))
+	TestServer.RegisterRoute("GET", "/foo/{bar}/:", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
+		response.Write([]byte("GET /foo/{bar}/: " + ctx.Value("routeParams").(RouteParams)["bar"] + " " + ctx.Value("routeParams").(RouteParams)["{catchAll}"]))
 	})
 
-	TestServer.RegisterRoute("GET", "/all", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.RegisterRoute("GET", "/all", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 
 		requestURL := (*request).URL.String()
 		bodyString := string(*body)
-		queryParam := queryParams.Get("foo")
+		queryParam := ctx.Value("queryParams").(*url.Values).Get("foo")
 
 		response.Write([]byte(requestURL + " " + bodyString + " " + queryParam))
 
 	})
 
-	allowMiddleware := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
-		state.Set("foo", "bar")
+	allowMiddleware := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) (bool, int) {
+		ctx.Value("state").(*RequestState).Set("foo", "bar")
 		return true, 0
 	}
 
-	denyMiddleware := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
+	denyMiddleware := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) (bool, int) {
 		return false, 401
 	}
 
-	TestServer.RegisterRoute("GET", "/middleware_allow", []Middleware{allowMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-		response.Write([]byte("middleware_allow " + state.Get("foo").(string)))
+	TestServer.RegisterRoute("GET", "/middleware_allow", []Middleware{allowMiddleware}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
+		response.Write([]byte("middleware_allow " + ctx.Value("state").(*RequestState).Get("foo").(string)))
 	})
 
-	TestServer.RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.RegisterRoute("GET", "/middleware_deny", []Middleware{allowMiddleware, denyMiddleware}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 		response.Write([]byte("middleware_deny"))
 	})
 
@@ -77,7 +78,7 @@ func testRouteSetUp() {
 // TestRegisterRoute tests registering a route with the router
 func TestRegisterRoute(t *testing.T) {
 
-	TestServer.RegisterRoute("GET", "/foo", []Middleware{}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	TestServer.RegisterRoute("GET", "/foo", []Middleware{}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 	})
 
 	TestServer.Router.RoutesLock.RLock()
@@ -103,9 +104,9 @@ func TestRegisterRoute(t *testing.T) {
 // TestRegisterRouteToMultipleMethods tests registering a route with the router against multiple HTTP methods
 func TestRegisterRouteToMultipleMethods(t *testing.T) {
 
-	TestServer.RegisterRoute("GET|PUT", "/bar", []Middleware{func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) (bool, int) {
+	TestServer.RegisterRoute("GET|PUT", "/bar", []Middleware{func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) (bool, int) {
 		return false, 401
-	}}, func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
+	}}, func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {
 	})
 
 	TestServer.Router.RoutesLock.RLock()

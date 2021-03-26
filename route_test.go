@@ -1,17 +1,15 @@
 package jsonserver
 
 import (
+	"context"
 	"net/http"
-	"net/url"
 	"testing"
 )
 
 // TestNoRouteMatch tests route path not matching against a URL
 func TestNoRouteMatch(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/foo", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/bar")
 
@@ -28,9 +26,7 @@ func TestNoRouteMatch(t *testing.T) {
 // TestCloseNoRouteMatch tests route path not matching against a URL that almost matches
 func TestCloseNoRouteMatch(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/foo/bar", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/foo")
 
@@ -47,9 +43,7 @@ func TestCloseNoRouteMatch(t *testing.T) {
 // TestMatchesBaseURL tests route path matching against the base URL
 func TestMatchesBaseURL(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/")
 
@@ -66,9 +60,7 @@ func TestMatchesBaseURL(t *testing.T) {
 // TestMatchesStaticURL tests route path matching against a full static URL
 func TestMatchesStaticURL(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/shop/products", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/shop/products")
 
@@ -85,9 +77,7 @@ func TestMatchesStaticURL(t *testing.T) {
 // TestMatchesDynamicURL tests route path matching against a full dynamic URL
 func TestMatchesDynamicURL(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/shop/products/{id}", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/shop/products/123")
 
@@ -104,9 +94,7 @@ func TestMatchesDynamicURL(t *testing.T) {
 // TestMatchesMultipleDynamicURL tests route path matching against a full multiple dynamic URL
 func TestMatchesMultipleDynamicURL(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/shop/{category}/products/{id}", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/shop/kitchen/products/123")
 
@@ -123,9 +111,7 @@ func TestMatchesMultipleDynamicURL(t *testing.T) {
 // TestMatchesMultipleDynamicURLWithFinalWildcard tests route path matching against a full multiple dynamic URL with a final wildcard
 func TestMatchesMultipleDynamicURLWithFinalWildcard(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/shop/{category}/products/{id}/:", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/shop/kitchen/products/123/foo/bar")
 
@@ -142,9 +128,7 @@ func TestMatchesMultipleDynamicURLWithFinalWildcard(t *testing.T) {
 // TestMatchesURLWithOnlyFinalWildcard tests route path matching against a URL with only a final wildcard
 func TestMatchesURLWithOnlyFinalWildcard(t *testing.T) {
 
-	action := func(request *http.Request, response http.ResponseWriter, body *[]byte, queryParams url.Values, routeParams RouteParams, state *RequestState) {
-	}
-
+	action := func(ctx context.Context, request *http.Request, response http.ResponseWriter, body *[]byte) {}
 	route := Route{Path: "/:", Action: action, Middleware: []Middleware{}}
 	matches, params := route.MatchesPath("/foo/bar")
 
