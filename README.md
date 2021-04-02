@@ -25,6 +25,7 @@ func main() {
 
     server := jsonserver.NewServer()
 
+    server.EnableTLS("/path/to/ssl/cert", "/path/to/ssl/key")
     server.RegisterRoute("GET", "/", middleware, index)
     server.RegisterRoute("GET", "/products/{id}", middleware, products)
 

@@ -5,19 +5,44 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
 
 // Server represents a HTTP server
 type Server struct {
-	Router *Router
+	Router   *Router
+	CertPath string
+	KeyPath  string
 }
 
 // NewServer creates a new server
 func NewServer() *Server {
 
 	return &Server{Router: &Router{}}
+
+}
+
+// EnableTLS enabled TLS for the server
+func (server *Server) EnableTLS(certPath string, keyPath string) error {
+
+	_, err := os.Stat(certPath)
+
+	if os.IsNotExist(err) {
+		return err
+	}
+
+	_, err = os.Stat(keyPath)
+
+	if os.IsNotExist(err) {
+		return err
+	}
+
+	server.CertPath = certPath
+	server.KeyPath = keyPath
+
+	return nil
 
 }
 
@@ -52,7 +77,7 @@ func (server *Server) ServeHTTP(response http.ResponseWriter, request *http.Requ
 			WriteResponse(response, &JSON{"success": false, "message": "Access denied"}, middlewareResponseCode)
 
 			// No matching routes found
-		} else if success == false {
+		} else if !success {
 
 			WriteResponse(response, &JSON{"success": false, "message": "Could not find " + path}, http.StatusNotFound)
 
@@ -72,10 +97,24 @@ func (server *Server) Start(port int, timeout int) {
 
 	go func() {
 
-		err := http.ListenAndServe(":"+strconv.Itoa(port), mux)
+		// HTTPS requests
+		if server.CertPath != "" && server.KeyPath != "" {
 
-		if err != nil {
-			log.Fatal(err)
+			err := http.ListenAndServeTLS(":"+strconv.Itoa(port), server.CertPath, server.KeyPath, mux)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// HTTP requests
+		} else {
+
+			err := http.ListenAndServe(":"+strconv.Itoa(port), mux)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
 		}
 
 	}()
