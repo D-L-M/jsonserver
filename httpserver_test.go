@@ -6,12 +6,33 @@ import (
 	"testing"
 )
 
-// TestServerCanListen tests starting and making a request to the server
-func TestServerCanListen(t *testing.T) {
+// TestEnableTLSFailsWithBadCertPath tests that the server fails to start if an
+// invalid cert path is provided
+func TestEnableTLSFailsWithBadCertPath(t *testing.T) {
+
+	if NewServer().EnableTLS("foo", "./test.key") == nil {
+		t.Errorf("Server unexpectedly started")
+	}
+
+}
+
+// TestEnableTLSFailsWithBadKeyPath tests that the server fails to start if an
+// invalid key path is provided
+func TestEnableTLSFailsWithBadKeyPath(t *testing.T) {
+
+	if NewServer().EnableTLS("./test.crt", "foo") == nil {
+		t.Errorf("Server unexpectedly started")
+	}
+
+}
+
+// TestServerCanListenHTTPS tests starting and making a HTTPS request to the
+// server
+func TestServerCanListenHTTPS(t *testing.T) {
 
 	testRouteSetUp()
 
-	response, err := http.Get("http://127.0.0.1:9999/")
+	response, err := http.Get("https://127.0.0.1:9999/")
 
 	if err != nil {
 
@@ -43,13 +64,67 @@ func TestServerCanListen(t *testing.T) {
 
 }
 
-// TestServerTimesOut tests starting and making a request to the server that
-// times out
-func TestServerTimesOut(t *testing.T) {
+// TestServerCanListenHTTP tests starting and making a HTTP request to the
+// server
+func TestServerCanListenHTTP(t *testing.T) {
 
 	testRouteSetUp()
 
-	response, _ := http.Get("http://127.0.0.1:9999/timeout")
+	response, err := http.Get("http://127.0.0.1:9998/")
+
+	if err != nil {
+
+		t.Errorf("Unable to make request")
+
+	} else {
+
+		defer response.Body.Close()
+
+		body, err := ioutil.ReadAll(response.Body)
+
+		if err != nil {
+
+			t.Errorf("Unexpected error thrown when attempting to read response")
+
+		} else {
+
+			bodyString := string(body)
+
+			if bodyString != "GET /" {
+				t.Errorf("Could not reach route")
+			}
+
+		}
+
+	}
+
+	testRouteTearDown()
+
+}
+
+// TestServerTimesOutHTTPS tests starting and making a HTTPS request to the
+// server that times out
+func TestServerTimesOutHTTPS(t *testing.T) {
+
+	testRouteSetUp()
+
+	response, _ := http.Get("https://127.0.0.1:9999/timeout")
+
+	if response.StatusCode != 503 {
+		t.Errorf("Request did not timeout like expected")
+	}
+
+	testRouteTearDown()
+
+}
+
+// TestServerTimesOutHTTP tests starting and making a HTTP request to the
+// server that times out
+func TestServerTimesOutHTTP(t *testing.T) {
+
+	testRouteSetUp()
+
+	response, _ := http.Get("http://127.0.0.1:9998/timeout")
 
 	if response.StatusCode != 503 {
 		t.Errorf("Request did not timeout like expected")
@@ -64,7 +139,7 @@ func TestServerReturnsNotFound(t *testing.T) {
 
 	testRouteSetUp()
 
-	response, err := http.Get("http://127.0.0.1:9999/404")
+	response, err := http.Get("https://127.0.0.1:9999/404")
 
 	if err != nil {
 
@@ -106,7 +181,7 @@ func TestServerReturnsOutputFromDenyingMiddleware(t *testing.T) {
 
 	testRouteSetUp()
 
-	response, err := http.Get("http://127.0.0.1:9999/middleware_deny")
+	response, err := http.Get("https://127.0.0.1:9999/middleware_deny")
 
 	if err != nil {
 
