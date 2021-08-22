@@ -2,6 +2,7 @@ package jsonserver
 
 import (
 	"bytes"
+	"crypto/tls"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -100,7 +101,22 @@ func (server *Server) Start(port int, timeout int) {
 		// HTTPS requests
 		if server.CertPath != "" && server.KeyPath != "" {
 
-			err := http.ListenAndServeTLS(":"+strconv.Itoa(port), server.CertPath, server.KeyPath, mux)
+			certificate, err := tls.LoadX509KeyPair(server.CertPath, server.KeyPath)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			httpServer := &http.Server{
+				Addr:    ":" + strconv.Itoa(port),
+				Handler: mux,
+				TLSConfig: &tls.Config{
+					Certificates: []tls.Certificate{certificate},
+					MinVersion:   tls.VersionTLS12,
+				},
+			}
+
+			err = httpServer.ListenAndServeTLS("", "")
 
 			if err != nil {
 				log.Fatal(err)
